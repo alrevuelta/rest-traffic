@@ -28,8 +28,8 @@ jobs:
         password: ${{ secrets.DOCKERHUB_TOKEN }}
 
     - name: Build and push multi-architecture image
-      uses: docker/build-push-action@v3
+      uses: docker/build-push-action@v5
       with:
         push: true
         platforms: linux/amd64,linux/arm64,linux/ppc64le,linux/s390x
-        tags: alrevuelta/rest-traffic:${{ steps.commit.outputs.short }}
+        tag: alrevuelta/rest-traffic:${{ steps.commit.outputs.short }}
