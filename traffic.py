@@ -1,5 +1,6 @@
 import requests
 import time
+import datetime
 import json
 import os
 import base64
@@ -24,20 +25,22 @@ def send_waku_msg(node_address, kbytes, pubsub_topic, content_topic):
     url = f"{node_address}/relay/v1/messages/{encoded_pubsub_topic}"
     headers = {'content-type': 'application/json'}
 
-    print('Waku REST API: %s PubSubTopic: %s, ContentTopic: %s' % (url, pubsub_topic, content_topic))
+    readable_time = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    print('[%s] Waku REST API: %s PubSubTopic: %s, ContentTopic: %s' % (readable_time, url, pubsub_topic, content_topic))
     s_time = time.time()
     
     response = None
-
+    readable_time = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
     try:
-      print("Sending request")
+      print('[%s] Sending request' % readable_time)
       response = requests.post(url, json=body, headers=headers)
     except Exception as e:
       print(f"Error sending request: {e}")
 
     if(response != None):
       elapsed_ms = (time.time() - s_time) * 1000
-      print('Response from %s: status:%s content:%s [%.4f ms.]' % (node_address, \
+      readable_time = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+      print('[%s] Response from %s: status:%s content:%s [%.4f ms.]' % (readable_time, node_address, \
         response.status_code, response.text, elapsed_ms))
 
 parser = argparse.ArgumentParser(description='')
@@ -87,5 +90,6 @@ while True:
       for node in nodes:
         send_waku_msg(node, args.msg_size_kbytes, args.pubsub_topic, args.content_topic)
 
-    print("sleeping: ", args.delay_seconds, " seconds")
+    readable_time = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+    print('[%s] sleeping: %s seconds' % (readable_time, args.delay_seconds))
     time.sleep(args.delay_seconds)
