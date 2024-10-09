@@ -47,8 +47,8 @@ parser = argparse.ArgumentParser(description='')
 
 # these flags are mutually exclusive, one or the other, never at once
 group = parser.add_mutually_exclusive_group(required=True)
-group.add_argument('-sn', '--single-node', type=str, help='example: http://waku-simulator_nwaku_1:8645')
-group.add_argument('-mn', '--multiple-nodes', type=str, help='example: http://waku-simulator_nwaku_[1..10]:8645')
+group.add_argument('-sn', '--single-node', type=str, help='example: http://waku-simulator-nwaku-1:8645')
+group.add_argument('-mn', '--multiple-nodes', type=str, help='example: http://waku-simulator-nwaku-[1..10]:8645')
 
 # rest of araguments
 parser.add_argument('-c', '--content-topic', type=str, help='content topic', default="my-ctopic")
@@ -63,10 +63,15 @@ if args.single_node != None:
   print("Injecting traffic to single node REST API:", args.single_node)
 
 # this simply converts from http://url_[1..5]:port to
-# [http://url_1:port
+# [http://url_1:port or from http://url-[1..5]:port to
+# [http://url-1:port
 nodes = []
 if args.multiple_nodes:
-  range_nodes = args.multiple_nodes.split(":")[1].split("_")[2]
+  #if args.multiple_nodes contain underscore then split by underscore else split by hyphen
+  if "_" in args.multiple_nodes:
+    range_nodes = args.multiple_nodes.split(":")[1].split("_")[2]
+  else:
+    range_nodes = args.multiple_nodes.split(":")[1].split("-")[-1]
   node_placeholder = args.multiple_nodes.replace(range_nodes, "{placeholder}")
   clean_range = range_nodes.replace("[", "").replace("]", "")
   start = int(clean_range.split("..")[0])
