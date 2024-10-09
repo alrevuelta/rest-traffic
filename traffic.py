@@ -66,19 +66,15 @@ if args.single_node != None:
 # [http://url-1:port
 nodes = []
 if args.multiple_nodes:
-  match = re.search(r'\[(\d+)\.\.(\d+)\]', args.multiple_nodes)
-  if match:
-      start = int(match.group(1))
-      end = int(match.group(2))
-  else:
+  start, end = (int(x) for x in re.search(r"\[(\d+)\.\.(\d+)\]", args.multiple_nodes).groups()) 
+ 
+  if start is None or end is None:
       print("Could not parse range of multiple_nodes argument")
       exit
 
   print("Injecting traffic to multiple nodes REST APIs") 
-  for i in range(start, end+1):
-      range_start = args.multiple_nodes.index("[")
-      range_end = args.multiple_nodes.index("]")
-      nodes.append(args.multiple_nodes[:range_start] + str(i) + args.multiple_nodes[range_end+1:])
+  for i in range(end, start - 1, -1): 
+    nodes.append(re.sub(r"\[\d+\.\.\d+\]", str(i), args.multiple_nodes))
 
 for node in nodes:
   print(node)
