@@ -1,13 +1,12 @@
 import requests
 import time
 import datetime
-import json
 import os
 import base64
-import sys
 import urllib.parse
 import requests
 import argparse
+import re
 
 def send_waku_msg(node_address, kbytes, pubsub_topic, content_topic):
     # TODO dirty trick .replace("=", "")
@@ -67,19 +66,19 @@ if args.single_node != None:
 # [http://url-1:port
 nodes = []
 if args.multiple_nodes:
-  #if args.multiple_nodes contain underscore then split by underscore else split by hyphen
-  if "_" in args.multiple_nodes:
-    range_nodes = args.multiple_nodes.split(":")[1].split("_")[2]
+  match = re.search(r'\[(\d+)\.\.(\d+)\]', args.multiple_nodes)
+  if match:
+      start = int(match.group(1))
+      end = int(match.group(2))
   else:
-    range_nodes = args.multiple_nodes.split(":")[1].split("-")[-1]
-  node_placeholder = args.multiple_nodes.replace(range_nodes, "{placeholder}")
-  clean_range = range_nodes.replace("[", "").replace("]", "")
-  start = int(clean_range.split("..")[0])
-  end = int(clean_range.split("..")[1])
+      print("Could not parse range of multiple_nodes argument")
+      exit
 
   print("Injecting traffic to multiple nodes REST APIs") 
   for i in range(start, end+1):
-    nodes.append(node_placeholder.replace("{placeholder}", str(i)))
+      range_start = args.multiple_nodes.index("[")
+      range_end = args.multiple_nodes.index("]")
+      nodes.append(args.multiple_nodes[:range_start] + str(i) + args.multiple_nodes[range_end+1:])
 
 for node in nodes:
   print(node)
