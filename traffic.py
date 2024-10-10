@@ -1,13 +1,12 @@
 import requests
 import time
 import datetime
-import json
 import os
 import base64
-import sys
 import urllib.parse
 import requests
 import argparse
+import re
 
 def send_waku_msg(node_address, kbytes, pubsub_topic, content_topic):
     # TODO dirty trick .replace("=", "")
@@ -47,8 +46,8 @@ parser = argparse.ArgumentParser(description='')
 
 # these flags are mutually exclusive, one or the other, never at once
 group = parser.add_mutually_exclusive_group(required=True)
-group.add_argument('-sn', '--single-node', type=str, help='example: http://waku-simulator_nwaku_1:8645')
-group.add_argument('-mn', '--multiple-nodes', type=str, help='example: http://waku-simulator_nwaku_[1..10]:8645')
+group.add_argument('-sn', '--single-node', type=str, help='example: http://waku-simulator-nwaku-1:8645')
+group.add_argument('-mn', '--multiple-nodes', type=str, help='example: http://waku-simulator-nwaku-[1..10]:8645')
 
 # rest of araguments
 parser.add_argument('-c', '--content-topic', type=str, help='content topic', default="my-ctopic")
@@ -63,18 +62,19 @@ if args.single_node != None:
   print("Injecting traffic to single node REST API:", args.single_node)
 
 # this simply converts from http://url_[1..5]:port to
-# [http://url_1:port
+# [http://url_1:port or from http://url-[1..5]:port to
+# [http://url-1:port
 nodes = []
 if args.multiple_nodes:
-  range_nodes = args.multiple_nodes.split(":")[1].split("_")[2]
-  node_placeholder = args.multiple_nodes.replace(range_nodes, "{placeholder}")
-  clean_range = range_nodes.replace("[", "").replace("]", "")
-  start = int(clean_range.split("..")[0])
-  end = int(clean_range.split("..")[1])
+  start, end = (int(x) for x in re.search(r"\[(\d+)\.\.(\d+)\]", args.multiple_nodes).groups()) 
+ 
+  if start is None or end is None:
+      print("Could not parse range of multiple_nodes argument")
+      exit
 
   print("Injecting traffic to multiple nodes REST APIs") 
-  for i in range(start, end+1):
-    nodes.append(node_placeholder.replace("{placeholder}", str(i)))
+  for i in range(end, start - 1, -1): 
+    nodes.append(re.sub(r"\[\d+\.\.\d+\]", str(i), args.multiple_nodes))
 
 for node in nodes:
   print(node)
